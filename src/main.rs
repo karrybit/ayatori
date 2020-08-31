@@ -1,4 +1,4 @@
-use clap::{App, Arg};
+use clap;
 use std::io;
 
 mod lexer;
@@ -8,13 +8,20 @@ mod scanner;
 mod subscription;
 mod token_type;
 
-fn main() -> Result<(), io::Error> {
-    let matches = App::new("ayatori")
+struct Arg {
+    environment: String,
+    base_file_path: String,
+    publisher_file_name: String,
+    subscriber_file_name: String,
+}
+
+fn parse_arg() -> Arg {
+    let matches = clap::App::new("ayatori")
         .version("0.1.0")
         .author("Takumi Karibe <takumi.k.5610@gmail.com>")
         .about("Analysis of dependency between services in microservices")
         .arg(
-            Arg::with_name("environment")
+            clap::Arg::with_name("environment")
                 .help("Environment")
                 .takes_value(true)
                 .short("e")
@@ -23,7 +30,7 @@ fn main() -> Result<(), io::Error> {
                 .required(true),
         )
         .arg(
-            Arg::with_name("base_file_path")
+            clap::Arg::with_name("base_file_path")
                 .help("Base file path")
                 .takes_value(true)
                 .short("b")
@@ -31,7 +38,7 @@ fn main() -> Result<(), io::Error> {
                 .required(true),
         )
         .arg(
-            Arg::with_name("publisher_file_name")
+            clap::Arg::with_name("publisher_file_name")
                 .help("Publisher file name")
                 .takes_value(true)
                 .short("p")
@@ -39,7 +46,7 @@ fn main() -> Result<(), io::Error> {
                 .required(true),
         )
         .arg(
-            Arg::with_name("subscriber_file_name")
+            clap::Arg::with_name("subscriber_file_name")
                 .help("Subscriber file name")
                 .takes_value(true)
                 .short("s")
@@ -61,9 +68,28 @@ fn main() -> Result<(), io::Error> {
         .value_of("subscriber_file_name")
         .unwrap_or_else(|| panic!("subscriber file name is required"));
 
-    let (subscription_files, subscription_contents) =
-        scanner::scan(&environment, &base_file_path, &subscriber_file_name)?;
+    Arg {
+        environment: environment.to_owned(),
+        base_file_path: base_file_path.to_owned(),
+        publisher_file_name: publisher_file_name.to_owned(),
+        subscriber_file_name: subscriber_file_name.to_owned(),
+    }
+}
+
+fn main() -> Result<(), io::Error> {
+    let arg = parse_arg();
+    let (publish_files, subscription_contents) = scanner::scan(
+        &arg.environment,
+        &arg.base_file_path,
+        &arg.publisher_file_name,
+    )?;
+    let (subscription_files, subscription_contents) = scanner::scan(
+        &arg.environment,
+        &arg.base_file_path,
+        &arg.subscriber_file_name,
+    )?;
     let subscriptions = parse_subscription(subscription_files, subscription_contents);
+    dbg!(subscriptions);
     Ok(())
 }
 

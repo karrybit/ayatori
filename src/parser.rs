@@ -1,5 +1,5 @@
 use crate::lexer::Lexer;
-use crate::resource::Resource;
+use crate::resource::{Resource, ResourceType};
 use crate::token_type::TokenType;
 use std::collections::HashMap;
 
@@ -57,9 +57,7 @@ impl<'a> Parser<'a> {
             &TokenType::Literal(ref literal) => literal,
             _ => panic!("token is invalid. expect TokenType::Literal"),
         };
-        if resource_name_literal != "aws_sns_topic_subscription" {
-            panic!("token is invalid. expect aws_sns_topic_subscription");
-        }
+        let resource_type = ResourceType::from_str(resource_name_literal);
         self.next_token();
 
         let event_name_token = self
@@ -92,7 +90,7 @@ impl<'a> Parser<'a> {
         }
         self.next_token();
 
-        Resource::new(event_name_literal.to_owned(), attributes)
+        Resource::new(resource_type, event_name_literal.to_owned(), attributes)
     }
     fn parse_attributes(&mut self) -> HashMap<String, String> {
         let mut attributes = HashMap::<String, String>::new();
