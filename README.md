@@ -20,3 +20,15 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 <key>           ::= <atom>
 <atom>          ::= ("a"|...|"z")*("a"|...|"z"|"."|"-"|"_"|"0"|...|"9")*
 ```
+
+### Usage
+
+```sh
+USAGE:
+    ayatori --environment <environment> --base_path <base_path> --publisher <publisher_file_name> --subscriber <subscriber_file_name>
+OPTIONS:
+    -e, --environment    <environment>           Environment [possible values: develop, staging, production]
+    -b, --base_file_path <base_file_path>        Base file path
+    -p, --publisher      <publisher_file_name>   Publisher file name
+    -s, --subscriber     <subscriber_file_name>  Subscriber file name
+```
