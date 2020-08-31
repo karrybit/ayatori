@@ -5,7 +5,7 @@ mod lexer;
 mod parser;
 mod resource;
 mod scanner;
-mod subscription;
+mod service;
 mod token_type;
 
 struct Arg {
@@ -78,17 +78,18 @@ fn parse_arg() -> Arg {
 
 fn main() -> Result<(), io::Error> {
     let arg = parse_arg();
-    let (publish_files, subscription_contents) = scanner::scan(
+    let (publish_files, publish_contents) = scanner::scan(
         &arg.environment,
         &arg.base_file_path,
         &arg.publisher_file_name,
     )?;
+    let publishes = parse_services(publish_files, publish_contents);
     let (subscription_files, subscription_contents) = scanner::scan(
         &arg.environment,
         &arg.base_file_path,
         &arg.subscriber_file_name,
     )?;
-    let subscriptions = parse_subscription(subscription_files, subscription_contents);
+    let subscriptions = parse_services(subscription_files, subscription_contents);
     dbg!(subscriptions);
     Ok(())
 }
@@ -103,10 +104,7 @@ fn parse(content: String) -> Vec<resource::Resource> {
     resources
 }
 
-fn parse_subscription(
-    files: Vec<String>,
-    contents: Vec<String>,
-) -> Vec<subscription::Subscription> {
+fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<service::Service> {
     let service_names = files
         .into_iter()
         .map(|file| {
@@ -121,6 +119,6 @@ fn parse_subscription(
     service_names
         .into_iter()
         .zip(resources.into_iter())
-        .map(|(service_name, resource)| subscription::Subscription::new(service_name, resource))
-        .collect::<Vec<subscription::Subscription>>()
+        .map(|(name, resources)| service::Service::new(name, resources))
+        .collect::<Vec<service::Service>>()
 }
