@@ -90,7 +90,6 @@ fn main() -> Result<(), io::Error> {
         &arg.subscriber_file_name,
     )?;
     let subscriptions = parse_services(subscription_files, subscription_contents);
-    dbg!(subscriptions);
     Ok(())
 }
 

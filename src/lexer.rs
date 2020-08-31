@@ -32,6 +32,19 @@ impl Lexer {
                 self.read();
                 TokenType::RBrace
             }
+            Some(ch) if ch == '<' && self.input[self.position + 1] == '<' => {
+                (0..2).for_each(|_| self.read());
+                let tag = self.read_identifier();
+                let hear_document = self.read_hear_document(&tag);
+                (0..tag.len()).for_each(|_| self.read());
+                TokenType::HearDoc(hear_document)
+            }
+            Some(ch) if ch == '"' => {
+                self.read();
+                let value = self.read_value();
+                self.read();
+                TokenType::Literal(value)
+            }
             Some(ch) if Self::is_letter(&ch) => {
                 let literal = self.read_identifier();
                 TokenType::Literal(literal)
@@ -60,6 +73,32 @@ impl Lexer {
             self.read();
         }
         self.input[position..self.position]
+            .iter()
+            .collect::<String>()
+            .as_str()
+            .trim_matches('"')
+            .to_string()
+    }
+    fn read_value(&mut self) -> String {
+        let position = self.position;
+        while self.examining_char.as_ref().map_or(false, |ch| ch != &'"') {
+            self.read();
+        }
+        self.input[position..self.position]
+            .iter()
+            .collect::<String>()
+            .as_str()
+            .to_string()
+    }
+    fn read_hear_document(&mut self, tag: &str) -> String {
+        let position = self.position;
+        let pos = self.input[self.position..]
+            .iter()
+            .collect::<String>()
+            .find(tag)
+            .unwrap_or_else(|| panic!("hear document is not closed"));
+        (0..pos).for_each(|_| self.read());
+        self.input[position..(position + pos)]
             .iter()
             .collect::<String>()
             .as_str()

@@ -4,6 +4,7 @@ pub(crate) enum TokenType {
     LBrace,
     RBrace,
     Equal,
+    HearDoc(String),
     Illegal(char),
     EOF,
 }

@@ -129,8 +129,17 @@ impl<'a> Parser<'a> {
             .take()
             .unwrap_or_else(|| panic!("token is none"));
         let value_literal = match value_token.as_ref() {
-            &TokenType::Literal(ref literal) => literal,
-            _ => panic!("token is invalid. expect TokenType::Literal"),
+            &TokenType::Literal(ref literal) => literal.clone(),
+            &TokenType::HearDoc(ref hear_doc) => hear_doc.clone(),
+            &TokenType::LBrace => {
+                self.next_token();
+                let attr = self.parse_attributes();
+                if Some(&Box::new(TokenType::RBrace)) != self.current_token.as_ref() {
+                    panic!("token is invalid. expect rbrace");
+                }
+                format!("{:?}", attr)
+            }
+            _ => panic!("token is invalid. expect TokenType::Literal or TokenType::HearDoc"),
         };
         self.next_token();
 
