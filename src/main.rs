@@ -15,7 +15,7 @@ fn main() -> Result<(), io::Error> {
         .about("Analysis of dependency between services in microservices")
         .arg(
             Arg::with_name("environment")
-                .help("environment")
+                .help("Environment")
                 .takes_value(true)
                 .short("e")
                 .long("environment")
@@ -23,27 +23,27 @@ fn main() -> Result<(), io::Error> {
                 .required(true),
         )
         .arg(
-            Arg::with_name("path")
-                .help("base file path")
+            Arg::with_name("base_file_path")
+                .help("Base file path")
                 .takes_value(true)
                 .short("b")
-                .long("base_path")
+                .long("base_file_path")
                 .required(true),
         )
         .arg(
-            Arg::with_name("subscriber")
-                .help("Subscription files name")
-                .takes_value(true)
-                .short("s")
-                .long("subscriber")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("publisher")
-                .help("Publisher files name")
+            Arg::with_name("publisher_file_name")
+                .help("Publisher file name")
                 .takes_value(true)
                 .short("p")
                 .long("publisher")
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("subscriber_file_name")
+                .help("Subscriber file name")
+                .takes_value(true)
+                .short("s")
+                .long("subscriber")
                 .required(true),
         )
         .get_matches();
@@ -51,18 +51,18 @@ fn main() -> Result<(), io::Error> {
     let environment = matches
         .value_of("environment")
         .unwrap_or_else(|| panic!("environment is required"));
-    let base_path = matches
-        .value_of("path")
-        .unwrap_or_else(|| panic!("path file path is required"));
-    let subscriber_file_name = matches
-        .value_of("subscriber")
-        .unwrap_or_else(|| panic!("subscriber file name is required"));
+    let base_file_path = matches
+        .value_of("base_file_path")
+        .unwrap_or_else(|| panic!("base path file path is required"));
     let publisher_file_name = matches
-        .value_of("publisher")
+        .value_of("publisher_file_name")
         .unwrap_or_else(|| panic!("publisher file name is required"));
+    let subscriber_file_name = matches
+        .value_of("subscriber_file_name")
+        .unwrap_or_else(|| panic!("subscriber file name is required"));
 
     let (subscription_files, subscription_contents) =
-        scanner::scan(&environment, &base_path, &subscriber_file_name)?;
+        scanner::scan(&environment, &base_file_path, &subscriber_file_name)?;
     let subscriptions = parse_subscription(subscription_files, subscription_contents);
     Ok(())
 }
