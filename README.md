@@ -1,8 +1,6 @@
 # ayatori
 
----
-
-## Analysis of dependency between services in microservices
+### Analysis of dependency between services in microservices
 
 This app parse Terraform writing relationship of microservices. Then, solve SNS topic and subscription as dependency graph
 
