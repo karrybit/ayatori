@@ -1,9 +1,8 @@
 use std::{fs, io};
 
 mod lexer;
+mod model;
 mod parser;
-mod resource;
-mod service;
 mod token_type;
 
 pub fn scan(
@@ -31,7 +30,7 @@ pub fn scan(
     Ok((files, contents))
 }
 
-pub fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<service::Service> {
+pub fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<model::Service> {
     let service_names = files
         .into_iter()
         .map(|file| {
@@ -42,15 +41,15 @@ pub fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<service:
     let resources = contents
         .into_iter()
         .map(|content| parse(content))
-        .collect::<Vec<Vec<resource::Resource>>>();
+        .collect::<Vec<Vec<model::Resource>>>();
     service_names
         .into_iter()
         .zip(resources.into_iter())
-        .map(|(name, resources)| service::Service::new(name, resources))
-        .collect::<Vec<service::Service>>()
+        .map(|(name, resources)| model::Service::new(name, resources))
+        .collect::<Vec<model::Service>>()
 }
 
-fn parse(content: String) -> Vec<resource::Resource> {
+fn parse(content: String) -> Vec<model::Resource> {
     if content.is_empty() {
         return vec![];
     }

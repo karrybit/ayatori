@@ -1,5 +1,5 @@
 use crate::lexer::Lexer;
-use crate::resource::{Resource, ResourceType};
+use crate::model::{Resource, ResourceType};
 use crate::token_type::TokenType;
 use std::collections::HashMap;
 
