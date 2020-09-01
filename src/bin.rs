@@ -5,7 +5,7 @@ use std::io;
 struct Arg {
     environment: String,
     base_file_path: String,
-    publisher_file_name: String,
+    topic_file_name: String,
     subscriber_file_name: String,
 }
 
@@ -32,11 +32,11 @@ fn parse_arg() -> Arg {
                 .required(true),
         )
         .arg(
-            clap::Arg::with_name("publisher_file_name")
-                .help("Publisher file name")
+            clap::Arg::with_name("topic_file_name")
+                .help("Topic file name")
                 .takes_value(true)
-                .short("p")
-                .long("publisher")
+                .short("t")
+                .long("topic")
                 .required(true),
         )
         .arg(
@@ -55,9 +55,9 @@ fn parse_arg() -> Arg {
     let base_file_path = matches
         .value_of("base_file_path")
         .unwrap_or_else(|| panic!("base path file path is required"));
-    let publisher_file_name = matches
-        .value_of("publisher_file_name")
-        .unwrap_or_else(|| panic!("publisher file name is required"));
+    let topic_file_name = matches
+        .value_of("topic_file_name")
+        .unwrap_or_else(|| panic!("topic file name is required"));
     let subscriber_file_name = matches
         .value_of("subscriber_file_name")
         .unwrap_or_else(|| panic!("subscriber file name is required"));
@@ -65,18 +65,15 @@ fn parse_arg() -> Arg {
     Arg {
         environment: environment.to_owned(),
         base_file_path: base_file_path.to_owned(),
-        publisher_file_name: publisher_file_name.to_owned(),
+        topic_file_name: topic_file_name.to_owned(),
         subscriber_file_name: subscriber_file_name.to_owned(),
     }
 }
 
 fn main() -> Result<(), io::Error> {
     let arg = parse_arg();
-    let (publish_files, publish_contents) = ayatori::scan(
-        &arg.environment,
-        &arg.base_file_path,
-        &arg.publisher_file_name,
-    )?;
+    let (publish_files, publish_contents) =
+        ayatori::scan(&arg.environment, &arg.base_file_path, &arg.topic_file_name)?;
     let publishes = ayatori::parse_services(publish_files, publish_contents);
     let (subscription_files, subscription_contents) = ayatori::scan(
         &arg.environment,
