@@ -5,6 +5,13 @@ authors = ["makanai5610 <takumi.k.5610@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "ayatori"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ayatori-driver"
+path = "src/bin.rs"
 
 [dependencies]
 clap = ""

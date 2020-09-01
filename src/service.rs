@@ -1,7 +1,7 @@
 use crate::resource::Resource;
 
 #[derive(Debug)]
-pub(crate) struct Service {
+pub struct Service {
     name: String,
     resources: Vec<Resource>,
 }

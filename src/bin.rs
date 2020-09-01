@@ -1,12 +1,6 @@
+use ayatori;
 use clap;
 use std::io;
-
-mod lexer;
-mod parser;
-mod resource;
-mod scanner;
-mod service;
-mod token_type;
 
 struct Arg {
     environment: String,
@@ -78,50 +72,21 @@ fn parse_arg() -> Arg {
 
 fn main() -> Result<(), io::Error> {
     let arg = parse_arg();
-    let (publish_files, publish_contents) = scanner::scan(
+    let (publish_files, publish_contents) = ayatori::scan(
         &arg.environment,
         &arg.base_file_path,
         &arg.publisher_file_name,
     )?;
-    let publishes = parse_services(publish_files, publish_contents);
-    let (subscription_files, subscription_contents) = scanner::scan(
+    let publishes = ayatori::parse_services(publish_files, publish_contents);
+    let (subscription_files, subscription_contents) = ayatori::scan(
         &arg.environment,
         &arg.base_file_path,
         &arg.subscriber_file_name,
     )?;
-    let subscriptions = parse_services(subscription_files, subscription_contents);
+    let subscriptions = ayatori::parse_services(subscription_files, subscription_contents);
 
     dbg!(publishes);
     dbg!(subscriptions);
 
     Ok(())
-}
-
-fn parse(content: String) -> Vec<resource::Resource> {
-    if content.is_empty() {
-        return vec![];
-    }
-    let mut lexer = lexer::Lexer::new(content);
-    let mut parser = parser::Parser::new(&mut lexer);
-    let resources = parser.parse_resources();
-    resources
-}
-
-fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<service::Service> {
-    let service_names = files
-        .into_iter()
-        .map(|file| {
-            let splited = file.split('/').last();
-            splited.map_or("", |s| s.trim_matches('"')).to_owned()
-        })
-        .collect::<Vec<String>>();
-    let resources = contents
-        .into_iter()
-        .map(|content| parse(content))
-        .collect::<Vec<Vec<resource::Resource>>>();
-    service_names
-        .into_iter()
-        .zip(resources.into_iter())
-        .map(|(name, resources)| service::Service::new(name, resources))
-        .collect::<Vec<service::Service>>()
 }
