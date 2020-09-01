@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum ResourceType {
     Topic,
     Subscription,
@@ -16,7 +16,7 @@ impl ResourceType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Resource {
     resource_type: ResourceType,
     event_name: String,
@@ -37,7 +37,7 @@ impl Resource {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Service {
     name: String,
     resources: Vec<Resource>,

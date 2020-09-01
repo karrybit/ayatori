@@ -1,5 +1,6 @@
 use std::{fs, io};
 
+mod builder;
 mod lexer;
 mod model;
 mod parser;
