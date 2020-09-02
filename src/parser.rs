@@ -5,10 +5,10 @@ pub(crate) fn parse(content: String) -> Vec<Resource> {
     if content.is_empty() {
         return vec![];
     }
+
     let mut lexer = Lexer::new(content);
     let mut parser = Parser::new(&mut lexer);
-    let resources = parser.parse_resources();
-    resources
+    parser.parse_resources()
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -39,6 +39,7 @@ impl Lexer {
         lexer.read();
         lexer
     }
+
     fn next(&mut self) -> TokenType {
         self.skip_whitespace();
         match self.examining_char {
@@ -46,40 +47,52 @@ impl Lexer {
                 self.read();
                 TokenType::Equal
             }
+
             Some(ch) if ch == '{' => {
                 self.read();
                 TokenType::LBrace
             }
+
             Some(ch) if ch == '}' => {
                 self.read();
                 TokenType::RBrace
             }
+
             Some(ch) if ch == '<' && self.input[self.position + 1] == '<' => {
                 (0..2).for_each(|_| self.read());
+
                 let tag = self.read_identifier();
                 let hear_document = self.read_hear_document(&tag);
+
                 (0..tag.len()).for_each(|_| self.read());
                 TokenType::HearDoc(hear_document)
             }
+
             Some(ch) if ch == '"' => {
                 self.read();
                 let value = self.read_value();
                 self.read();
+
                 TokenType::Literal(value)
             }
+
             Some(ch) if Self::is_letter(&ch) => {
                 let literal = self.read_identifier();
                 TokenType::Literal(literal)
             }
+
             Some(ch) => TokenType::Illegal(ch),
+
             None => TokenType::EOF,
         }
     }
+
     fn read(&mut self) {
         self.examining_char = self.input.get(self.read_position).cloned();
         self.position = self.read_position;
         self.read_position += 1;
     }
+
     fn skip_whitespace(&mut self) {
         while self
             .examining_char
@@ -89,11 +102,14 @@ impl Lexer {
             self.read();
         }
     }
+
     fn read_identifier(&mut self) -> String {
         let position = self.position;
+
         while self.examining_char.as_ref().map_or(false, Self::is_letter) {
             self.read();
         }
+
         self.input[position..self.position]
             .iter()
             .collect::<String>()
@@ -101,17 +117,21 @@ impl Lexer {
             .trim_matches('"')
             .to_string()
     }
+
     fn read_value(&mut self) -> String {
         let position = self.position;
+
         while self.examining_char.as_ref().map_or(false, |ch| ch != &'"') {
             self.read();
         }
+
         self.input[position..self.position]
             .iter()
             .collect::<String>()
             .as_str()
             .to_string()
     }
+
     fn read_hear_document(&mut self, tag: &str) -> String {
         let position = self.position;
         let pos = self.input[self.position..]
@@ -120,6 +140,7 @@ impl Lexer {
             .find(tag)
             .unwrap_or_else(|| panic!("hear document is not closed"));
         (0..pos).for_each(|_| self.read());
+
         self.input[position..(position + pos)]
             .iter()
             .collect::<String>()
@@ -127,6 +148,7 @@ impl Lexer {
             .trim_matches('"')
             .to_string()
     }
+
     fn is_letter(ch: &char) -> bool {
         ch.is_ascii_alphanumeric()
             || ch == &'_'
@@ -154,12 +176,15 @@ impl<'a> Parser<'a> {
         parser.next_token();
         parser
     }
+
     fn next_token(&mut self) {
         self.current_token = self.peek_token.take();
         self.peek_token = Some(Box::new(self.lexer.next()));
     }
+
     fn parse_resources(&mut self) -> Vec<Resource> {
         let mut resources: Vec<Resource> = vec![];
+
         while self
             .current_token
             .as_ref()
@@ -167,8 +192,10 @@ impl<'a> Parser<'a> {
         {
             resources.push(self.parse_resource())
         }
+
         resources
     }
+
     fn parse_resource(&mut self) -> Resource {
         let resource_reserved_token = self
             .current_token
@@ -226,8 +253,10 @@ impl<'a> Parser<'a> {
 
         Resource::new(resource_type, event_name_literal.to_owned(), attributes)
     }
+
     fn parse_attributes(&mut self) -> HashMap<String, String> {
         let mut attributes = HashMap::<String, String>::new();
+
         while self
             .current_token
             .as_ref()
@@ -236,8 +265,10 @@ impl<'a> Parser<'a> {
             let (key, value) = self.parse_attribute();
             attributes.insert(key, value);
         }
+
         attributes
     }
+
     fn parse_attribute(&mut self) -> (String, String) {
         let key_token = self
             .current_token

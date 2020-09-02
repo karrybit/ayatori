@@ -15,8 +15,10 @@ pub fn run(
         scanner::scan(&environment, &base_file_path, &topic_file_path)?;
     let (subscription_files, subscription_contents) =
         scanner::scan(&environment, &base_file_path, &subscription_file_path)?;
+
     let topic_services = parse_services(topic_files, topic_contents);
     let subscription_services = parse_services(subscription_files, subscription_contents);
+
     Ok((topic_services, subscription_services))
 }
 
@@ -32,6 +34,7 @@ fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<model::Servi
         .into_iter()
         .map(|content| parser::parse(content))
         .collect::<Vec<Vec<model::Resource>>>();
+
     service_names
         .into_iter()
         .zip(resources.into_iter())

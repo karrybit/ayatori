@@ -78,7 +78,9 @@ fn main() -> Result<(), io::Error> {
         arg.topic_file_name,
         arg.subscription_file_name,
     )?;
+
     dbg!(topic_services);
     dbg!(subscription_services);
+
     Ok(())
 }
