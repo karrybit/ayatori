@@ -4,7 +4,6 @@ mod builder;
 mod model;
 mod parser;
 mod scanner;
-mod token_type;
 
 pub fn run(
     environment: String,

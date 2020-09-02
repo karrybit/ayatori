@@ -1,5 +1,4 @@
 use crate::model::{Resource, ResourceType};
-use crate::token_type::TokenType;
 use std::collections::HashMap;
 
 pub(crate) fn parse(content: String) -> Vec<Resource> {
@@ -10,6 +9,17 @@ pub(crate) fn parse(content: String) -> Vec<Resource> {
     let mut parser = Parser::new(&mut lexer);
     let resources = parser.parse_resources();
     resources
+}
+
+#[derive(Clone, PartialEq, Debug)]
+enum TokenType {
+    Literal(String),
+    LBrace,
+    RBrace,
+    Equal,
+    HearDoc(String),
+    Illegal(char),
+    EOF,
 }
 
 #[derive(Default)]
