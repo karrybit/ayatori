@@ -1,37 +1,51 @@
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub(crate) enum ResourceType {
+pub(crate) enum ResourceKind {
     Topic,
     Subscription,
 }
 
-impl ResourceType {
+impl ResourceKind {
     pub(crate) fn from_str(str: &str) -> Self {
         match str {
-            "aws_sns_topic" => ResourceType::Topic,
-            "aws_sns_topic_subscription" => ResourceType::Subscription,
+            "aws_sns_topic" => ResourceKind::Topic,
+            "aws_sns_topic_subscription" => ResourceKind::Subscription,
             _ => panic!("invalid resource type from str"),
         }
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum ValueType {
+    Str(String),
+    Number(i32),
+    Bool(bool),
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum ValueContainer {
+    Dictionary(HashMap<String, ValueContainer>),
+    Array(Vec<Box<ValueContainer>>),
+    Value(ValueType),
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct Resource {
-    resource_type: ResourceType,
-    event_name: String,
-    attributes: HashMap<String, String>,
+    kind: ResourceKind,
+    name: String,
+    attributes: HashMap<String, ValueContainer>,
 }
 
 impl Resource {
     pub(crate) fn new(
-        resource_type: ResourceType,
-        event_name: String,
-        attributes: HashMap<String, String>,
+        kind: ResourceKind,
+        name: String,
+        attributes: HashMap<String, ValueContainer>,
     ) -> Self {
         Resource {
-            resource_type,
-            event_name,
+            kind,
+            name,
             attributes,
         }
     }
