@@ -21,7 +21,7 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 <array>         ::= "[" ((<atom> ",")+ | <atom>) "]"
 <atom>          ::= (<string>(<symbol>|<string>)+) | <number> | <bool>
 <string>        ::= ("A"|...|"z")
-<symbol>        ::= ("."|"-"|"_")
+<symbol>        ::= ("""|"."|":"|"-"|"_")
 <number>        ::= (1|...|9)+(0|...|9)
 <bool>          ::= true | false
 ```
