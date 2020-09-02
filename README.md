@@ -25,10 +25,10 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 
 ```sh
 USAGE:
-    ayatori --environment <environment> --base_path <base_path> --topic <topic_file_name> --subscriber <subscriber_file_name>
+    ayatori --environment <environment> --base_path <base_path> --topic <topic_file_name> --subscription <subscription_file_name>
 OPTIONS:
-    -e, --environment    <environment>           Environment [possible values: develop, staging, production]
-    -b, --base_file_path <base_file_path>        Base file path
-    -t, --topic      <topic_file_name>           Topic file name
-    -s, --subscriber     <subscriber_file_name>  Subscriber file name
+    -e, --environment    <environment>                  Environment [possible values: develop, staging, production]
+    -b, --base_file_path <base_file_path>               Base file path
+    -t, --topic      <topic_file_name>                  Topic file name
+    -s, --subscription     <subscription_file_name>     Subscription file name
 ```

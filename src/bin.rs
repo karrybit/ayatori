@@ -6,7 +6,7 @@ struct Arg {
     environment: String,
     base_file_path: String,
     topic_file_name: String,
-    subscriber_file_name: String,
+    subscription_file_name: String,
 }
 
 fn parse_arg() -> Arg {
@@ -40,11 +40,11 @@ fn parse_arg() -> Arg {
                 .required(true),
         )
         .arg(
-            clap::Arg::with_name("subscriber_file_name")
-                .help("Subscriber file name")
+            clap::Arg::with_name("subscription_file_name")
+                .help("Subscription file name")
                 .takes_value(true)
                 .short("s")
-                .long("subscriber")
+                .long("subscription")
                 .required(true),
         )
         .get_matches();
@@ -58,15 +58,15 @@ fn parse_arg() -> Arg {
     let topic_file_name = matches
         .value_of("topic_file_name")
         .unwrap_or_else(|| panic!("topic file name is required"));
-    let subscriber_file_name = matches
-        .value_of("subscriber_file_name")
-        .unwrap_or_else(|| panic!("subscriber file name is required"));
+    let subscription_file_name = matches
+        .value_of("subscription_file_name")
+        .unwrap_or_else(|| panic!("subscription file name is required"));
 
     Arg {
         environment: environment.to_owned(),
         base_file_path: base_file_path.to_owned(),
         topic_file_name: topic_file_name.to_owned(),
-        subscriber_file_name: subscriber_file_name.to_owned(),
+        subscription_file_name: subscription_file_name.to_owned(),
     }
 }
 
@@ -76,7 +76,7 @@ fn main() -> Result<(), io::Error> {
         arg.environment,
         arg.base_file_path,
         arg.topic_file_name,
-        arg.subscriber_file_name,
+        arg.subscription_file_name,
     )?;
     dbg!(topic_services);
     dbg!(subscription_services);
