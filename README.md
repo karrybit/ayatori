@@ -7,17 +7,17 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 ###### May be BNF
 
 ```
-<statements>    ::= (<statement>)+
-<statement>     ::= "resource" <resource_name> <event_name> <attributes>
-<attributes>    ::= "{" ((<attribute> ",")+ | <attribute>) "}"
+<resources>    ::= (<resource>)+
+<resource>     ::= "resource" <resource_name> <atom> "{" <attributes> "}"
+<resource_name> ::= "aws_sns_topic" | "aws_sns_topic_subscription"
+<attributes>    ::= (<attribute>)*
 <attribute>     ::= <key> "=" (<here_doc> | <value>)
-<here_doc>      ::= "<<" <atom> <attributs> <atom>
-<value>         ::= <atom> | "[" <atoms> "]" | <attributes>
-<array>         ::= "[" <atoms> "]"
-<atoms>         ::= (<atom> ",")+ | <atom>
-<resource_name> ::= <atom>
-<event_name>    ::= <atom>
+<hear_doc>     ::= "<<" <tag> <dictionary> <tag>
+<tag>           ::= ("A"|...|"Z")*
+<dictionary>    ::= "{" (<key> "=" <value> ",")+ | (<key> "=" <value>) "}"
 <key>           ::= <atom>
+<value>         ::= <dictionary> | <array> | <atom>
+<array>         ::= "[" ((<atoms> ",")+ | <atom>) "]"
 <atom>          ::= ("a"|...|"z")*("a"|...|"z"|"."|"-"|"_"|"0"|...|"9")*
 ```
 
