@@ -6,19 +6,24 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 
 ###### May be BNF
 
-```
-<resources>    ::= (<resource>)+
-<resource>     ::= "resource" <resource_name> <atom> "{" <attributes> "}"
+```BNF
+<resources>     ::= (<resource>)+
+<resource>      ::= "resource" <resource_name> <ident> "{" <attributes> "}"
 <resource_name> ::= "aws_sns_topic" | "aws_sns_topic_subscription"
 <attributes>    ::= (<attribute>)*
-<attribute>     ::= <key> "=" (<here_doc> | <value>)
-<hear_doc>     ::= "<<" <tag> <dictionary> <tag>
+<attribute>     ::= <ident> "=" (<here_doc> | <value>)
+<ident>         ::= <string>*(<string>|<symbol>|<number>)*
+<hear_doc>      ::= "<<" <tag> <dictionary> <tag>
 <tag>           ::= ("A"|...|"Z")*
 <dictionary>    ::= "{" (<key> "=" <value> ",")+ | (<key> "=" <value>) "}"
-<key>           ::= <atom>
+<key>           ::= """ <ident> """
 <value>         ::= <dictionary> | <array> | <atom>
-<array>         ::= "[" ((<atoms> ",")+ | <atom>) "]"
-<atom>          ::= ("a"|...|"z")*("a"|...|"z"|"."|"-"|"_"|"0"|...|"9")*
+<array>         ::= "[" ((<atom> ",")+ | <atom>) "]"
+<atom>          ::= (<string>(<symbol>|<string>)+) | <number> | <bool>
+<string>        ::= ("A"|...|"z")
+<symbol>        ::= ("."|"-"|"_")
+<number>        ::= (1|...|9)+(0|...|9)
+<bool>          ::= true | false
 ```
 
 ### Usage
