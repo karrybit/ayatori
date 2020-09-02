@@ -72,18 +72,13 @@ fn parse_arg() -> Arg {
 
 fn main() -> Result<(), io::Error> {
     let arg = parse_arg();
-    let (publish_files, publish_contents) =
-        ayatori::scan(&arg.environment, &arg.base_file_path, &arg.topic_file_name)?;
-    let publishes = ayatori::parse_services(publish_files, publish_contents);
-    let (subscription_files, subscription_contents) = ayatori::scan(
-        &arg.environment,
-        &arg.base_file_path,
-        &arg.subscriber_file_name,
+    let (topic_services, subscription_services) = ayatori::run(
+        arg.environment,
+        arg.base_file_path,
+        arg.topic_file_name,
+        arg.subscriber_file_name,
     )?;
-    let subscriptions = ayatori::parse_services(subscription_files, subscription_contents);
-
-    dbg!(publishes);
-    dbg!(subscriptions);
-
+    dbg!(topic_services);
+    dbg!(subscription_services);
     Ok(())
 }

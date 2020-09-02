@@ -1,16 +1,140 @@
-use crate::lexer::Lexer;
 use crate::model::{Resource, ResourceType};
 use crate::token_type::TokenType;
 use std::collections::HashMap;
 
-pub(crate) struct Parser<'a> {
+pub(crate) fn parse(content: String) -> Vec<Resource> {
+    if content.is_empty() {
+        return vec![];
+    }
+    let mut lexer = Lexer::new(content);
+    let mut parser = Parser::new(&mut lexer);
+    let resources = parser.parse_resources();
+    resources
+}
+
+#[derive(Default)]
+struct Lexer {
+    input: Vec<char>,
+    position: usize,
+    read_position: usize,
+    examining_char: Option<char>,
+}
+
+impl Lexer {
+    fn new(input: String) -> Self {
+        let mut lexer = Self {
+            input: input.chars().collect(),
+            ..Default::default()
+        };
+        lexer.read();
+        lexer
+    }
+    fn next(&mut self) -> TokenType {
+        self.skip_whitespace();
+        match self.examining_char {
+            Some(ch) if ch == '=' => {
+                self.read();
+                TokenType::Equal
+            }
+            Some(ch) if ch == '{' => {
+                self.read();
+                TokenType::LBrace
+            }
+            Some(ch) if ch == '}' => {
+                self.read();
+                TokenType::RBrace
+            }
+            Some(ch) if ch == '<' && self.input[self.position + 1] == '<' => {
+                (0..2).for_each(|_| self.read());
+                let tag = self.read_identifier();
+                let hear_document = self.read_hear_document(&tag);
+                (0..tag.len()).for_each(|_| self.read());
+                TokenType::HearDoc(hear_document)
+            }
+            Some(ch) if ch == '"' => {
+                self.read();
+                let value = self.read_value();
+                self.read();
+                TokenType::Literal(value)
+            }
+            Some(ch) if Self::is_letter(&ch) => {
+                let literal = self.read_identifier();
+                TokenType::Literal(literal)
+            }
+            Some(ch) => TokenType::Illegal(ch),
+            None => TokenType::EOF,
+        }
+    }
+    fn read(&mut self) {
+        self.examining_char = self.input.get(self.read_position).cloned();
+        self.position = self.read_position;
+        self.read_position += 1;
+    }
+    fn skip_whitespace(&mut self) {
+        while self
+            .examining_char
+            .as_ref()
+            .map_or(false, char::is_ascii_whitespace)
+        {
+            self.read();
+        }
+    }
+    fn read_identifier(&mut self) -> String {
+        let position = self.position;
+        while self.examining_char.as_ref().map_or(false, Self::is_letter) {
+            self.read();
+        }
+        self.input[position..self.position]
+            .iter()
+            .collect::<String>()
+            .as_str()
+            .trim_matches('"')
+            .to_string()
+    }
+    fn read_value(&mut self) -> String {
+        let position = self.position;
+        while self.examining_char.as_ref().map_or(false, |ch| ch != &'"') {
+            self.read();
+        }
+        self.input[position..self.position]
+            .iter()
+            .collect::<String>()
+            .as_str()
+            .to_string()
+    }
+    fn read_hear_document(&mut self, tag: &str) -> String {
+        let position = self.position;
+        let pos = self.input[self.position..]
+            .iter()
+            .collect::<String>()
+            .find(tag)
+            .unwrap_or_else(|| panic!("hear document is not closed"));
+        (0..pos).for_each(|_| self.read());
+        self.input[position..(position + pos)]
+            .iter()
+            .collect::<String>()
+            .as_str()
+            .trim_matches('"')
+            .to_string()
+    }
+    fn is_letter(ch: &char) -> bool {
+        ch.is_ascii_alphanumeric()
+            || ch == &'_'
+            || ch == &'"'
+            || ch == &':'
+            || ch == &'-'
+            || ch == &'.'
+    }
+}
+
+struct Parser<'a> {
     lexer: &'a mut Lexer,
     current_token: Option<Box<TokenType>>,
     peek_token: Option<Box<TokenType>>,
 }
 
 impl<'a> Parser<'a> {
-    pub(crate) fn new(lexer: &'a mut Lexer) -> Self {
+    fn new(lexer: &'a mut Lexer) -> Self {
         let mut parser = Self {
             lexer,
             current_token: Default::default(),
@@ -24,7 +148,7 @@ impl<'a> Parser<'a> {
         self.current_token = self.peek_token.take();
         self.peek_token = Some(Box::new(self.lexer.next()));
     }
-    pub(crate) fn parse_resources(&mut self) -> Vec<Resource> {
+    fn parse_resources(&mut self) -> Vec<Resource> {
         let mut resources: Vec<Resource> = vec![];
         while self
             .current_token
