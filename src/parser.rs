@@ -411,7 +411,7 @@ impl<'a> Parser<'a> {
     fn parse_value(&mut self) -> ValueContainer {
         match self
             .current_token
-            .take()
+            .as_ref()
             .unwrap_or_else(|| panic!("token is none"))
             .as_ref()
         {
@@ -439,7 +439,7 @@ impl<'a> Parser<'a> {
             .map_or(false, |token| token.as_ref() != &TokenType::RBracket)
         {
             let value_container = self.parse_value();
-            vec.push(Box::new(value_container.clone()));
+            vec.push(Box::new(value_container));
 
             if self
                 .current_token
