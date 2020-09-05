@@ -6,22 +6,26 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 
 ###### May be BNF
 
-```BNF
+```
 <resources>     ::= (<resource>)+
-<resource>      ::= "resource" """ <resource_kind> """ """ <ident> """ "{" <attributes> "}"
-<resource_kind> ::= aws_sns_topic | aws_sns_topic_subscription
-<attributes>    ::= (<attribute>)*
-<attribute>     ::= <ident> "=" (<here_doc> | <value>)
-<ident>         ::= <string>*(<string>|<symbol>|<number>)*
-<hear_doc>      ::= "<<" <tag> <dictionary> <tag>
-<tag>           ::= ("A"|...|"Z")*
-<json>          ::= "{" <dictionary> "}"
-<dictionary>    ::= (""" <ident> """ "=" <value> ",")+ | (""" <ident> """ "=" <value>)
+<resource>      ::= 'resource' <string> <string> '{' <attribute>* '}'
+<resource_kind> ::= 'aws_sns_topic' | 'aws_sns_topic_subscription'
+<attribute>     ::= <ident> '=' (<atom> | <ident> | <headoc>)
+<ident>         ::= <char>(<char> | <symbol> | <number>)*
+<hear_doc>      ::= '<<' <tag> <dictionary> <tag>
+<tag>           ::= ('A'|...|'Z')*
+
+<dictionary>    ::= '{' <key_values> '}'
+<key_values>    ::= <key_value> | <key_value> ',' <key_values>
+<key_value>     ::= <string> ':' '=' <value>
+<array>         ::= '[' <values> ']'
+<values>        ::= <value> | <value> ',' <values>
 <value>         ::= <dictionary> | <array> | <atom>
-<array>         ::= "[" ((<value> ",")+ | <value>) "]"
-<atom>          ::= (""" <string>(<symbol>|<string>)+ """) | <number> | <bool>
-<string>        ::= ("A"|...|"z")
-<symbol>        ::= ("."|":"|"-"|"_")
+<atom>          ::= <string> | <number> | <bool>
+
+<string>        ::= '"' (<char>(<char> | <symbol> | <number>)*)+ '"'
+<char>          ::= ('A'|...|'z')
+<symbol>        ::= ('.'|':'|'-'|'_')
 <number>        ::= (1|...|9)+(0|...|9)
 <bool>          ::= true | false
 ```
