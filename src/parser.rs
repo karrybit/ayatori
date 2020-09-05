@@ -18,7 +18,7 @@ enum TokenType {
     LBracket,
     RBracket,
     Comma,
-    Quote,
+    Colon,
     Equal,
     HearDocTag,
     Literal(String),
@@ -26,7 +26,7 @@ enum TokenType {
     EOF,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct Lexer {
     input: Vec<char>,
     position: usize,
@@ -51,10 +51,7 @@ impl Lexer {
     }
 
     fn skip_whitespace(&mut self) {
-        while char::is_whitespace(
-            self.examining_char
-                .unwrap_or_else(|| panic!("examining char is none")),
-        ) {
+        while self.examining_char.map_or(false, char::is_whitespace) {
             self.read();
         }
     }
@@ -82,6 +79,10 @@ impl Lexer {
                 self.read();
                 TokenType::Comma
             }
+            Some(ch) if ch == ':' => {
+                self.read();
+                TokenType::Colon
+            }
             Some(ch) if ch == '=' => {
                 self.read();
                 TokenType::Equal
@@ -92,10 +93,20 @@ impl Lexer {
             }
             Some(ch) if ch == '"' => {
                 self.read();
-                TokenType::Quote
+                let value = self.read_string();
+                match self.examining_char {
+                    Some(c) if c == '"' => (),
+                    Some(c) => panic!(
+                        "invalid char. expected: '\"', actual: {}, value: {}",
+                        c, value
+                    ),
+                    None => panic!("invalid char. expected: '\"', actual: None"),
+                }
+                self.read();
+                TokenType::Literal(value)
             }
             Some(ch) if Self::is_value(&ch) => {
-                let value = self.read_value();
+                let value = self.read_ident();
                 TokenType::Literal(value)
             }
             Some(ch) => TokenType::Illegal(ch),
@@ -103,14 +114,10 @@ impl Lexer {
         }
     }
 
-    fn read_value(&mut self) -> String {
+    fn read_ident(&mut self) -> String {
         let position = self.position;
 
-        while Self::is_value(
-            &self
-                .examining_char
-                .unwrap_or_else(|| panic!("examining char is none")),
-        ) {
+        while Self::is_value(&self.examining_char.unwrap()) {
             self.read();
         }
 
@@ -118,14 +125,29 @@ impl Lexer {
             .iter()
             .collect::<String>()
             .as_str()
-            .to_string()
+            .into()
+    }
+
+    fn read_string(&mut self) -> String {
+        let position = self.position;
+
+        while self.examining_char.map_or(false, |c| c != '"') {
+            self.read();
+        }
+
+        self.input[position..self.position]
+            .iter()
+            .collect::<String>()
+            .as_str()
+            .into()
     }
 
     fn is_value(ch: &char) -> bool {
-        ch.is_alphanumeric() || ['.', ':', '-', '_'].contains(ch)
+        ch.is_alphanumeric() || ['.', ':', '-', '_', '*'].contains(ch)
     }
 }
 
+#[derive(Debug)]
 struct Parser<'a> {
     lexer: &'a mut Lexer,
     current_token: Option<Box<TokenType>>,
@@ -147,16 +169,13 @@ impl<'a> Parser<'a> {
     fn next_token(&mut self) {
         self.current_token = self.peek_token.take();
         self.peek_token = Some(Box::new(self.lexer.next()));
+        println!("{:?}", self.current_token);
     }
 
     fn parse_resources(&mut self) -> Vec<Resource> {
         let mut resources: Vec<Resource> = vec![];
 
-        while self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::EOF)
-        {
+        while self.current_token_is_not(TokenType::EOF) {
             resources.push(self.parse_resource())
         }
 
@@ -164,158 +183,105 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_resource(&mut self) -> Resource {
-        let resource_reserved_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+        let resource_reserved_token = self.current_token.take().unwrap();
         let resource_literal = match resource_reserved_token.as_ref() {
             &TokenType::Literal(ref value) => value,
-            _ => panic!("token is invalid. expect TokenType::Value"),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
-        if resource_literal != "resource" {
-            panic!("token is invalid. expect resource");
-        }
+        self.expect_value("resource", &resource_literal, line!(), column!());
         self.next_token();
 
-        let quote_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
-        if quote_token.as_ref() == &TokenType::Quote {
-            panic!("token is invalid. expect TokenType::Quote")
-        }
-        self.next_token();
-
-        let resource_kind_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+        let resource_kind_token = self.current_token.take().unwrap();
         let resource_kind_literal = match resource_kind_token.as_ref() {
             &TokenType::Literal(ref value) => value,
-            _ => panic!("token is invalid. expect TokenType::Value"),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
         let resource_type = ResourceKind::from_str(resource_kind_literal);
         self.next_token();
 
-        let quote_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
-        if quote_token.as_ref() == &TokenType::Quote {
-            panic!("token is invalid. expect TokenType::Quote")
-        }
-        self.next_token();
-
-        let quote_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
-        if quote_token.as_ref() == &TokenType::Quote {
-            panic!("token is invalid. expect TokenType::Quote")
-        }
-        self.next_token();
-
-        let resource_name_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+        let resource_name_token = self.current_token.take().unwrap();
         let resource_name_literal = match resource_name_token.as_ref() {
             &TokenType::Literal(ref value) => value,
-            _ => panic!("token is invalid. expect TokenType::Value"),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
-        self.next_token();
-
-        let quote_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
-        if quote_token.as_ref() == &TokenType::Quote {
-            panic!("token is invalid. expect TokenType::Quote")
-        }
-        self.next_token();
-
-        let lbrace_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
-        if lbrace_token.as_ref() != &TokenType::LBrace {
-            panic!("token is invalid. expect TokenType::LBrace");
-        }
         self.next_token();
 
         let attributes = self.parse_attributes();
 
-        let rbrace_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
-        if rbrace_token.as_ref() != &TokenType::RBrace {
-            panic!("token is invalid. expect TokenType::RBrace");
-        }
-        self.next_token();
-
-        Resource::new(resource_type, resource_name_literal.to_owned(), attributes)
+        Resource::new(resource_type, resource_name_literal.into(), attributes)
     }
 
     fn parse_attributes(&mut self) -> HashMap<String, ValueContainer> {
+        let lbrace_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::LBrace, &lbrace_token, line!(), column!());
+        self.next_token();
+
         let mut attributes = HashMap::<String, ValueContainer>::new();
 
-        while self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::RBrace)
-        {
+        while !self.current_token_is(TokenType::RBrace) {
             let (key, value) = self.parse_attribute();
             attributes.insert(key, value);
+            self.next_token();
         }
+
+        let rbrace_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::RBrace, &rbrace_token, line!(), column!());
+        self.next_token();
 
         attributes
     }
 
     fn parse_attribute(&mut self) -> (String, ValueContainer) {
-        let ident_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+        let ident_token = self.current_token.take().unwrap();
         let ident_literal = match ident_token.as_ref() {
             &TokenType::Literal(ref value) => value,
-            _ => panic!("token is invalid. expect TokenType::Value"),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
         self.next_token();
 
-        if self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::Equal)
-        {
-            panic!("token is invalid. expect TokenType::Equal");
-        }
+        let equal_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::Equal, &equal_token, line!(), column!());
+        let peek_is_hear_doc_symbol = self.peek_token_is(TokenType::HearDocTag);
         self.next_token();
 
-        let value = if self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() == &TokenType::HearDocTag)
-        {
-            self.next_token();
+        let value = if peek_is_hear_doc_symbol {
             self.parse_hear_doc()
         } else {
-            self.next_token();
-            ValueContainer::Value(self.parse_atom())
+            self.parse_value()
         };
-        self.next_token();
+        (ident_literal.into(), value)
+    }
 
-        (ident_literal.to_owned(), value)
+    fn parse_value(&mut self) -> ValueContainer {
+        match self.current_token.as_ref().unwrap().as_ref() {
+            &TokenType::LBrace => self.parse_dictionary(),
+            &TokenType::LBracket => self.parse_array(),
+            _ => self.parse_atom(),
+        }
+    }
+
+    fn parse_json_value(&mut self) -> ValueContainer {
+        match self.current_token.as_ref().unwrap().as_ref() {
+            &TokenType::LBrace => self.parse_json(),
+            &TokenType::LBracket => self.parse_array(),
+            _ => self.parse_atom(),
+        }
     }
 
     fn parse_hear_doc(&mut self) -> ValueContainer {
-        let tag_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+        let hear_doc_symbol_token = self.current_token.take().unwrap();
+        self.expect_token(
+            TokenType::HearDocTag,
+            &hear_doc_symbol_token,
+            line!(),
+            column!(),
+        );
+        self.next_token();
+
+        let tag_token = self.current_token.take().unwrap();
         let start_tag = match tag_token.as_ref() {
             &TokenType::Literal(ref tag) => tag,
-            _ => panic!("token is invalid. expect TokenType::Literal"),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
         if !start_tag.chars().all(char::is_uppercase) {
             panic!("tag is invalid. expect all uppercase");
@@ -323,160 +289,201 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         let json = self.parse_json();
+        self.next_token();
 
-        let tag_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+        let tag_token = self.current_token.take().unwrap();
         let end_tag = match tag_token.as_ref() {
             &TokenType::Literal(ref tag) => tag,
-            _ => panic!("token is invalid. expect TokenType::Literal"),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
         if !end_tag.chars().all(char::is_uppercase) && start_tag == end_tag {
             panic!("tag is invalid. expect all uppercase");
         }
-        self.next_token();
 
         json
     }
 
-    fn parse_json(&mut self) -> ValueContainer {
-        if self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::LBrace)
-        {
-            panic!("token is invalid. expect TokenType::LBrace");
-        }
+    fn parse_dictionary(&mut self) -> ValueContainer {
+        let lbrace_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::LBrace, &lbrace_token, line!(), column!());
         self.next_token();
 
         let mut dictionary = HashMap::<String, ValueContainer>::new();
 
-        while self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::RBrace)
-        {
-            let (key, value) = self.parse_dictionary();
+        while !self.current_token_is(TokenType::RBrace) {
+            let (key, value) = self.parse_key_value();
             dictionary.insert(key, value);
-
-            if self
-                .current_token
-                .as_ref()
-                .map_or(false, |token| token.as_ref() != &TokenType::Comma)
-            {
-                panic!("Token is invalid. expect TokenType::Comma");
-            }
             self.next_token();
         }
+
+        let rbrace_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::RBrace, &rbrace_token, line!(), column!());
 
         ValueContainer::Dictionary(dictionary)
     }
 
-    fn parse_dictionary(&mut self) -> (String, ValueContainer) {
-        if self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::Quote)
-        {
-            panic!("token is invalid. expect TokenType::Quote");
-        }
-        self.next_token();
-
-        let ident_token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+    fn parse_key_value(&mut self) -> (String, ValueContainer) {
+        let ident_token = self.current_token.take().unwrap();
         let ident_literal = match ident_token.as_ref() {
-            &TokenType::Literal(ref value) if is_ident(value) => value,
-            &TokenType::Literal(_) => panic!("token is invalid. expect ident literal"),
-            _ => panic!("token is invalid. expect TokenType::Literal"),
+            &TokenType::Literal(ref value) if self.is_ident(value) => value,
+            &TokenType::Literal(ref l) => self.invalid_value("<IDENT>", l, line!(), column!()),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
         self.next_token();
 
-        if self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::Quote)
-        {
-            panic!("token is invalid. expect TokenType::Quote");
-        }
+        let equla_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::Equal, &equla_token, line!(), column!());
         self.next_token();
 
         let value = self.parse_value();
 
-        (ident_literal.clone(), value)
+        (ident_literal.into(), value)
     }
 
-    fn parse_value(&mut self) -> ValueContainer {
-        match self
-            .current_token
-            .as_ref()
-            .unwrap_or_else(|| panic!("token is none"))
-            .as_ref()
-        {
-            &TokenType::LBrace => self.parse_json(),
-            &TokenType::LBracket => self.parse_array(),
-            _ => ValueContainer::Value(self.parse_atom()),
+    fn parse_json(&mut self) -> ValueContainer {
+        let lbrace_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::LBrace, &lbrace_token, line!(), column!());
+        self.next_token();
+
+        let mut dictionary = HashMap::<String, ValueContainer>::new();
+
+        while !self.current_token_is(TokenType::RBrace) {
+            let (key, value) = self.parse_json_key_value();
+            dictionary.insert(key, value);
+            self.next_token();
+
+            if self.current_token_is(TokenType::Comma) {
+                self.next_token();
+            }
         }
+
+        let rbrace_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::RBrace, &rbrace_token, line!(), column!());
+
+        ValueContainer::Dictionary(dictionary)
+    }
+
+    fn parse_json_key_value(&mut self) -> (String, ValueContainer) {
+        let ident_token = self.current_token.take().unwrap();
+        let ident_literal = match ident_token.as_ref() {
+            &TokenType::Literal(ref value) if self.is_ident(value) => value,
+            &TokenType::Literal(ref l) => self.invalid_value("<IDENT>", l, line!(), column!()),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
+        };
+        self.next_token();
+
+        let colon_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::Colon, &colon_token, line!(), column!());
+        self.next_token();
+
+        let value = self.parse_json_value();
+
+        (ident_literal.into(), value)
     }
 
     fn parse_array(&mut self) -> ValueContainer {
-        if self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::LBracket)
-        {
-            panic!("token is invalid. expect TokenType::LBrace");
-        }
+        let lbracket_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::LBracket, &lbracket_token, line!(), column!());
         self.next_token();
 
         let mut vec: Vec<Box<ValueContainer>> = vec![];
 
-        while self
-            .current_token
-            .as_ref()
-            .map_or(false, |token| token.as_ref() != &TokenType::RBracket)
-        {
-            let value_container = self.parse_value();
+        while !self.current_token_is(TokenType::RBracket) {
+            let value_container = self.parse_json_value();
             vec.push(Box::new(value_container));
-
-            if self
-                .current_token
-                .as_ref()
-                .map_or(false, |token| token.as_ref() != &TokenType::Comma)
-            {
-                panic!("Token is invalid. expect TokenType::Comma");
-            }
             self.next_token();
+
+            if self.current_token_is(TokenType::Comma) {
+                self.next_token();
+            }
         }
+
+        let rbracket_token = self.current_token.take().unwrap();
+        self.expect_token(TokenType::RBracket, &rbracket_token, line!(), column!());
 
         ValueContainer::Array(vec)
     }
 
-    fn parse_atom(&mut self) -> ValueType {
-        let token = self
-            .current_token
-            .take()
-            .unwrap_or_else(|| panic!("token is none"));
+    fn parse_atom(&mut self) -> ValueContainer {
+        let token = self.current_token.take().unwrap();
         let value = match token.as_ref() {
             &TokenType::Literal(ref value) => value,
-            _ => panic!("token is invalid. expect TokenType::Literal"),
+            tt => self.invalid_token(TokenType::Literal("".into()), tt, line!(), column!()),
         };
-        match value {
-            n if n.parse::<i32>().ok().is_some() => ValueType::Number(n.parse::<i32>().unwrap()),
-            b if b.parse::<bool>().ok().is_some() => ValueType::Bool(b.parse::<bool>().unwrap()),
-            s if is_ident(s) => ValueType::Str(s.clone()),
-            _ => panic!("atom is invalid."),
-        }
+
+        let atom = if let Ok(n) = value.parse::<i32>() {
+            ValueType::Number(n)
+        } else if let Ok(b) = value.parse::<bool>() {
+            ValueType::Bool(b)
+        } else if value.is_empty() {
+            ValueType::Str("".into())
+        } else {
+            ValueType::Str(value.into())
+        };
+
+        ValueContainer::Value(atom)
+    }
+
+    fn is_ident(&self, ident: &str) -> bool {
+        let mut chars = ident.chars();
+        chars.all(|c| c.is_alphanumeric() || ['.', ':', '-', '_', '*'].contains(&c))
+    }
+
+    fn current_token_is(&self, expect: TokenType) -> bool {
+        self.current_token
+            .as_ref()
+            .map_or(false, |token| token.as_ref() == &expect)
+    }
+
+    fn current_token_is_not(&self, expect: TokenType) -> bool {
+        !self.current_token_is(expect)
+    }
+
+    fn peek_token_is(&self, expect: TokenType) -> bool {
+        self.peek_token
+            .as_ref()
+            .map_or(false, |token| token.as_ref() == &expect)
     }
 }
 
-fn is_ident(ident: &str) -> bool {
-    let mut chars = ident.chars();
-    let first = chars.next().unwrap_or_else(|| panic!("ident is empty"));
-    if !first.is_alphabetic() {
-        panic!("ident is invalid. expect alphabetic");
+impl<'a> Parser<'a> {
+    fn expect_token(&self, expect: TokenType, actual: &TokenType, line: u32, column: u32) {
+        if &expect != actual {
+            self.invalid_token(expect, actual, line, column)
+        }
     }
-    chars.all(|c| c.is_alphanumeric() || ['.', ':', '-', '_'].contains(&c))
+
+    fn invalid_token(&self, expect: TokenType, actual: &TokenType, line: u32, column: u32) -> ! {
+        // dbg!(self);
+        panic!(
+            "[{}:{}]: token is invalid. expect: {:?}, actual: {:?}",
+            line, column, expect, actual
+        );
+    }
+
+    fn expect_value<T: std::fmt::Debug + ?Sized + PartialEq>(
+        &self,
+        expect: &T,
+        actual: &T,
+        line: u32,
+        column: u32,
+    ) {
+        if expect != actual {
+            self.invalid_value(expect, actual, line, column);
+        }
+    }
+
+    fn invalid_value<T: std::fmt::Debug + ?Sized>(
+        &self,
+        expect: &T,
+        actual: &T,
+        line: u32,
+        column: u32,
+    ) -> ! {
+        // dbg!(self);
+        panic!(
+            "[{}:{}]: value is invalid. expect: {:?}, actual: {:?}",
+            line, column, expect, actual
+        );
+    }
 }
