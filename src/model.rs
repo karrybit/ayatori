@@ -31,10 +31,10 @@ pub(crate) enum ValueContainer {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Resource {
+pub struct Resource {
     kind: ResourceKind,
     name: String,
-    attributes: HashMap<String, ValueContainer>,
+    pub(crate) attributes: HashMap<String, ValueContainer>,
 }
 
 impl Resource {
@@ -53,8 +53,8 @@ impl Resource {
 
 #[derive(Debug, Clone)]
 pub struct Service {
-    name: String,
-    resources: Vec<Resource>,
+    pub(crate) name: String,
+    pub(crate) resources: Vec<Resource>,
 }
 
 impl Service {

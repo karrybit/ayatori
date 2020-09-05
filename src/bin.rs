@@ -72,15 +72,14 @@ fn parse_arg() -> Arg {
 
 fn main() -> Result<(), io::Error> {
     let arg = parse_arg();
-    let (topic_services, subscription_services) = ayatori::run(
+    let graph = ayatori::run(
         arg.environment,
         arg.base_file_path,
         arg.topic_file_name,
         arg.subscription_file_name,
     )?;
 
-    dbg!(topic_services);
-    dbg!(subscription_services);
+    dbg!(graph);
 
     Ok(())
 }

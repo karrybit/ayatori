@@ -1,3 +1,4 @@
+use petgraph;
 use std::io;
 
 mod builder;
@@ -10,7 +11,7 @@ pub fn run(
     base_file_path: String,
     topic_file_path: String,
     subscription_file_path: String,
-) -> Result<(Vec<model::Service>, Vec<model::Service>), io::Error> {
+) -> Result<petgraph::graph::Graph<String, String>, io::Error> {
     let (topic_files, topic_contents) =
         scanner::scan(&environment, &base_file_path, &topic_file_path)?;
     let (subscription_files, subscription_contents) =
@@ -19,7 +20,9 @@ pub fn run(
     let topic_services = parse_services(topic_files, topic_contents);
     let subscription_services = parse_services(subscription_files, subscription_contents);
 
-    Ok((topic_services, subscription_services))
+    let graph = builder::build(topic_services, subscription_services);
+
+    Ok(graph)
 }
 
 fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<model::Service> {
