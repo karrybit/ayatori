@@ -169,7 +169,6 @@ impl<'a> Parser<'a> {
     fn next_token(&mut self) {
         self.current_token = self.peek_token.take();
         self.peek_token = Some(Box::new(self.lexer.next()));
-        println!("{:?}", self.current_token);
     }
 
     fn parse_resources(&mut self) -> Vec<Resource> {
