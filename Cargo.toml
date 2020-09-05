@@ -16,3 +16,4 @@ path = "src/bin.rs"
 [dependencies]
 clap = ""
 petgraph = ""
+rayon = ""

@@ -1,4 +1,5 @@
 use petgraph;
+use rayon::prelude::*;
 use std::io;
 
 mod builder;
@@ -26,21 +27,28 @@ pub fn run(
 }
 
 fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<model::Service> {
-    let service_names = files
+    files
         .into_iter()
-        .map(|file| {
+        .zip(contents.into_iter())
+        .map(|(file, content)| {
             let splited = file.split('/').last();
-            splited.map_or("", |s| s.trim_matches('"')).to_owned()
+            let file_name = splited.map_or("", |s| s.trim_matches('"')).to_owned();
+            let resource = parser::parse(content);
+            model::Service::new(file_name, resource)
         })
-        .collect::<Vec<String>>();
-    let resources = contents
-        .into_iter()
-        .map(|content| parser::parse(content))
-        .collect::<Vec<Vec<model::Resource>>>();
+        .collect()
+}
 
-    service_names
-        .into_iter()
-        .zip(resources.into_iter())
-        .map(|(name, resources)| model::Service::new(name, resources))
-        .collect::<Vec<model::Service>>()
+#[allow(dead_code)]
+fn parse_par_services(files: Vec<String>, contents: Vec<String>) -> Vec<model::Service> {
+    files
+        .into_par_iter()
+        .zip(contents.into_par_iter())
+        .map(|(file, content)| {
+            let splited = file.split('/').last();
+            let file_name = splited.map_or("", |s| s.trim_matches('"')).to_owned();
+            let resource = parser::parse(content);
+            model::Service::new(file_name, resource)
+        })
+        .collect()
 }
