@@ -74,7 +74,7 @@ fn main() -> Result<(), io::Error> {
     let arg = parse_arg();
 
     #[allow(unused_variables)]
-    let graph = ayatori::run(
+    let graph = ayatori::par_run(
         arg.environment,
         arg.base_file_path,
         arg.topic_file_name,

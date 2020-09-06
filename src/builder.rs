@@ -59,23 +59,20 @@ pub(crate) fn build(topics: Vec<Service>, subscriptions: Vec<Service>) -> Graph<
     graph
 }
 
-#[allow(dead_code)]
 pub(crate) fn par_build(
     topics: Vec<Service>,
     subscriptions: Vec<Service>,
 ) -> Graph<String, String> {
     let graph = Arc::new(Mutex::new(Graph::<String, String>::new()));
-    let _graph = Arc::clone(&graph);
     let nodes = subscriptions
         .par_iter()
-        .map(|service| _graph.lock().unwrap().add_node(service.name.clone()))
+        .map(|service| graph.lock().unwrap().add_node(service.name.clone()))
         .collect::<Vec<_>>();
 
     subscriptions
         .iter()
         .enumerate()
         .for_each(|(i, subscription)| {
-            let _graph = Arc::clone(&graph);
             subscription.resources.par_iter().for_each(|resource| {
                 let subscribing_topic = match resource.attributes.get("topic_arn") {
                     Some(ValueContainer::Value(ValueType::Str(subscribing_topic))) => {
@@ -110,7 +107,7 @@ pub(crate) fn par_build(
                                 .iter()
                                 .position(|subscription| subscription.name == topic.name)
                             {
-                                _graph.lock().unwrap().add_edge(
+                                graph.lock().unwrap().add_edge(
                                     nodes[j],
                                     nodes[i],
                                     resource.clone(),
