@@ -1,3 +1,4 @@
+use crossbeam;
 use petgraph;
 use rayon::prelude::*;
 use std::io;
@@ -45,18 +46,30 @@ pub fn par_run(
     topic_file_path: String,
     subscription_file_path: String,
 ) -> Result<petgraph::graph::Graph<String, String>, io::Error> {
-    let (topic_files, topic_contents) =
-        scanner::scan(&environment, &base_file_path, &topic_file_path)?;
-    let (subscription_files, subscription_contents) =
-        scanner::scan(&environment, &base_file_path, &subscription_file_path)?;
+    let topic_parse_handle = crossbeam::scope(|scope| {
+        let handle: crossbeam::thread::ScopedJoinHandle<Result<Vec<model::Service>, io::Error>> =
+            scope.spawn(|_| {
+                let (topic_files, topic_contents) =
+                    scanner::par_scan(&environment, &base_file_path, &topic_file_path)?;
+                Ok(parse_par_services(topic_files, topic_contents))
+            });
+        handle.join().unwrap()
+    });
+    let subscription_parse_handle = crossbeam::scope(|scope| {
+        let handle: crossbeam::thread::ScopedJoinHandle<Result<Vec<model::Service>, io::Error>> =
+            scope.spawn(|_| {
+                let (subscription_files, subscription_contents) =
+                    scanner::par_scan(&environment, &base_file_path, &subscription_file_path)?;
+                Ok(parse_par_services(
+                    subscription_files,
+                    subscription_contents,
+                ))
+            });
+        handle.join().unwrap()
+    });
 
-    let topic_parse_handle =
-        std::thread::spawn(move || parse_par_services(topic_files, topic_contents));
-    let subscription_parse_handle =
-        std::thread::spawn(move || parse_par_services(subscription_files, subscription_contents));
-
-    let topic_services = topic_parse_handle.join().unwrap();
-    let subscription_services = subscription_parse_handle.join().unwrap();
+    let topic_services = topic_parse_handle.unwrap()?;
+    let subscription_services = subscription_parse_handle.unwrap()?;
 
     let graph = builder::par_build(topic_services, subscription_services);
 

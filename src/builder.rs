@@ -70,7 +70,7 @@ pub(crate) fn par_build(
         .collect::<Vec<_>>();
 
     subscriptions
-        .iter()
+        .par_iter()
         .enumerate()
         .for_each(|(i, subscription)| {
             subscription.resources.par_iter().for_each(|resource| {
@@ -80,8 +80,8 @@ pub(crate) fn par_build(
                     }
                     _ => panic!(),
                 };
-                topics.iter().for_each(|topic| {
-                    topic.resources.iter().for_each(|topic_resource| {
+                topics.par_iter().for_each(|topic| {
+                    topic.resources.par_iter().for_each(|topic_resource| {
                         let policy = match topic_resource.attributes.get("policy") {
                             Some(ValueContainer::Dictionary(policy)) => policy,
                             _ => panic!(),
