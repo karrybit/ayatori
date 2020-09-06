@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["makanai5610 <takumi.k.5610@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "ayatori"
 path = "src/lib.rs"
@@ -19,6 +18,9 @@ path = "src/par_bin.rs"
 
 [dependencies]
 clap = ""
-petgraph = ""
+petgraph = { version="", features=["serde-1"] }
 rayon = ""
 crossbeam = ""
+serde = ""
+serde_derive = ""
+serde_json = ""
