@@ -14,7 +14,7 @@ fn main() -> Result<(), io::Error> {
         arg.subscription_file_name,
     )?;
 
-    if arg.is_output_json_format {
+    if &arg.output_format == &"json" {
         let json = serde_json::to_string(&graph)?;
         println!("{}", json);
     } else {
