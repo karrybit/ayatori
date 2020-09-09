@@ -1,17 +1,11 @@
-resource "aws_sns_topic_subscription" "ServiceA_Event2" {
-  topic_arn = "ServiceA_Event2"
+resource "aws_sns_topic_subscription" "ServiceC_Event" {
+  topic_arn = "ServiceC_Event"
   protocol  = "sqs"
-  endpoint  = ServiceA
+  endpoint  = ServiceB
 }
 
-resource "aws_sns_topic_subscription" "ServiceC_Event2" {
-  topic_arn = "ServiceC_Event2"
+resource "aws_sns_topic_subscription" "ServiceE_Event" {
+  topic_arn = "ServiceE_Event"
   protocol  = "sqs"
-  endpoint  = ServiceA
-}
-
-resource "aws_sns_topic_subscription" "ServiceD_Event2" {
-  topic_arn = "ServiceD_Event2"
-  protocol  = "sqs"
-  endpoint  = ServiceA
+  endpoint  = ServiceB
 }
