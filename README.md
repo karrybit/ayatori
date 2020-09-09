@@ -14,7 +14,7 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 $ make help
 
 USAGE:
-    ayatori-driver [FLAGS] --base_file_path <base_file_path> --environment <environment> --format <output_format> --subscription <subscription_file_name> --topic <topic_file_name>
+    ayatori-driver [FLAGS] --base_file_path <base_file_path> --environment <environment> --subscription <subscription_file_name> --topic <topic_file_name>
 
 FLAGS:
     -h, --help          Prints help information

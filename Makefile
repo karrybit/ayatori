@@ -1,4 +1,4 @@
-ENV="staging"
+ENV=""
 BASE_PATH=""
 TOPIC=""
 SUBSCRIPTION=""
@@ -6,11 +6,14 @@ SUBSCRIPTION=""
 build: ./target/release/ayatori-driver
 	cargo build --release
 
-json: build
-	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -f json -t $(TOPIC) -s $(SUBSCRIPTION)
-
-dot: build
-	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -f dot -t $(TOPIC) -s $(SUBSCRIPTION) | dot -Tsvg -o dependency.svg
-
 help: build
 	./target/release/ayatori-driver --help
+
+run: build
+	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -t $(TOPIC) -s $(SUBSCRIPTION)
+
+json: build
+	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -t $(TOPIC) -s $(SUBSCRIPTION) -f json
+
+dot: build
+	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -t $(TOPIC) -s $(SUBSCRIPTION) -f dot | dot -Tsvg -o dependency.svg
