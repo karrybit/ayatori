@@ -10,7 +10,7 @@ json: build
 	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -f json -t $(TOPIC) -s $(SUBSCRIPTION)
 
 dot: build
-	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -f dot -t $(TOPIC) -s $(SUBSCRIPTION) | dot -Tsvg -o dot.svg
+	./target/release/ayatori-driver -e $(ENV) -b $(BASE_PATH) -f dot -t $(TOPIC) -s $(SUBSCRIPTION) | dot -Tsvg -o dependency.svg
 
 help: build
 	./target/release/ayatori-driver --help
