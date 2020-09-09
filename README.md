@@ -6,7 +6,49 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 
 ### Requirement
 
+##### tool
+
 - graphviz
+
+##### file tree
+
+`<target_base_path>/<service_name>/<environment>/<topic_file_name>`
+`<target_base_path>/<service_name>/<environment>/<subscription_file_name>`
+
+```sh
+$ tree analyze_target
+analyze_target
+├── service_A
+│    ├── develop
+│    │    ├── sns_topic.tf
+│    │    └── sns_subscription.tf
+│    ├── staging
+│    │    ├── sns_topic.tf
+│    │    └── sns_subscription.tf
+│    └── production
+│         ├── sns_topic.tf
+│         └── sns_subscription.tf
+├── service_B
+│    ├── develop
+│    │    ├── sns_topic.tf
+│    │    └── sns_subscription.tf
+│    ├── staging
+│    │    ├── sns_topic.tf
+│    │    └── sns_subscription.tf
+│    └── production
+│         ├── sns_topic.tf
+│         └── sns_subscription.tf
+└── service_C
+     ├── develop
+     │    ├── sns_topic.tf
+     │    └── sns_subscription.tf
+     ├── staging
+     │    ├── sns_topic.tf
+     │    └── sns_subscription.tf
+     └── production
+          ├── sns_topic.tf
+          └── sns_subscription.tf
+```
 
 ### Usage
 
