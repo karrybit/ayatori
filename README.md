@@ -4,6 +4,8 @@
 
 This app parse Terraform writing relationship of microservices. Then, solve SNS topic and subscription as dependency graph
 
+<image src="./img/dependency.svg">
+
 ### Requirement
 
 ##### tool
@@ -38,7 +40,17 @@ analyze_target
 │    └── production
 │         ├── sns_topic.tf
 │         └── sns_subscription.tf
-└── service_C
+├── service_C
+│    ├── develop
+│    │    ├── sns_topic.tf
+│    │    └── sns_subscription.tf
+│    ├── staging
+│    │    ├── sns_topic.tf
+│    │    └── sns_subscription.tf
+│    └── production
+│         ├── sns_topic.tf
+│         └── sns_subscription.tf
+└── service_D
      ├── develop
      │    ├── sns_topic.tf
      │    └── sns_subscription.tf
