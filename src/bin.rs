@@ -56,7 +56,7 @@ fn parse_arg() -> Arg {
                 .takes_value(true)
                 .short("f")
                 .long("format")
-                .possible_values(&["json", "graphviz", "d3"])
+                .possible_values(&["json", "dot", "d3"])
                 .required(true),
         )
         .arg(
@@ -79,7 +79,7 @@ fn parse_arg() -> Arg {
     let subscription_file_name = matches
         .value_of("subscription_file_name")
         .unwrap_or_else(|| panic!("subscription file name is required"));
-    let output_format = matches.value_of("output_format").unwrap_or("json");
+    let output_format = matches.value_of("output_format").unwrap_or("");
     let is_concurrent = matches.value_of("run_concurrent").is_some();
 
     Arg {
@@ -103,14 +103,22 @@ fn main() -> Result<(), io::Error> {
         arg.is_concurrent,
     )?;
 
-    if &arg.output_format == &"json" {
-        let json = serde_json::to_string(&graph)?;
-        println!("{}", json);
-    } else {
-        if cfg!(debug_assertions) {
-            dbg!(graph);
-        } else {
-            println!("{:#?}", graph);
+    match arg.output_format.as_str() {
+        "json" => {
+            let json = serde_json::to_string(&graph)?;
+            println!("{}", json);
+        }
+        "dot" => {
+            let dot =
+                petgraph::dot::Dot::with_config(&graph, &[petgraph::dot::Config::EdgeNoLabel]);
+            println!("{}", dot);
+        }
+        _ => {
+            if cfg!(debug_assertions) {
+                dbg!(graph);
+            } else {
+                println!("{:#?}", graph);
+            }
         }
     }
 
