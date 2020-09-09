@@ -12,10 +12,6 @@ path = "src/lib.rs"
 name = "ayatori-driver"
 path = "src/bin.rs"
 
-[[bin]]
-name = "ayatori-par-driver"
-path = "src/par_bin.rs"
-
 [dependencies]
 clap = ""
 petgraph = { version="", features=["serde-1"] }

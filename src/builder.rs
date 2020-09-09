@@ -59,7 +59,7 @@ pub(crate) fn build(topics: Vec<Service>, subscriptions: Vec<Service>) -> Graph<
     graph
 }
 
-pub(crate) fn par_build(
+pub(crate) fn build_concurrent(
     topics: Vec<Service>,
     subscriptions: Vec<Service>,
 ) -> Graph<String, String> {

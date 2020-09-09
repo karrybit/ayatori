@@ -26,7 +26,7 @@ pub(crate) fn scan(
     Ok((files, contents))
 }
 
-pub(crate) fn par_scan(
+pub(crate) fn scan_concurrent(
     environment: &str,
     base_path: &str,
     file_name: &str,

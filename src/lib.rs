@@ -13,6 +13,30 @@ pub fn run(
     base_file_path: String,
     topic_file_path: String,
     subscription_file_path: String,
+    is_conccurent: bool,
+) -> Result<petgraph::graph::Graph<String, String>, io::Error> {
+    if is_conccurent {
+        run_concurrent(
+            environment,
+            base_file_path,
+            topic_file_path,
+            subscription_file_path,
+        )
+    } else {
+        run_serial(
+            environment,
+            base_file_path,
+            topic_file_path,
+            subscription_file_path,
+        )
+    }
+}
+
+fn run_serial(
+    environment: String,
+    base_file_path: String,
+    topic_file_path: String,
+    subscription_file_path: String,
 ) -> Result<petgraph::graph::Graph<String, String>, io::Error> {
     let (topic_files, topic_contents) =
         scanner::scan(&environment, &base_file_path, &topic_file_path)?;
@@ -40,7 +64,7 @@ fn parse_services(files: Vec<String>, contents: Vec<String>) -> Vec<model::Servi
         .collect()
 }
 
-pub fn par_run(
+fn run_concurrent(
     environment: String,
     base_file_path: String,
     topic_file_path: String,
@@ -50,17 +74,20 @@ pub fn par_run(
         let handle: crossbeam::thread::ScopedJoinHandle<Result<Vec<model::Service>, io::Error>> =
             scope.spawn(|_| {
                 let (topic_files, topic_contents) =
-                    scanner::par_scan(&environment, &base_file_path, &topic_file_path)?;
-                Ok(parse_par_services(topic_files, topic_contents))
+                    scanner::scan_concurrent(&environment, &base_file_path, &topic_file_path)?;
+                Ok(parse_services_concurrent(topic_files, topic_contents))
             });
         handle.join().unwrap()
     });
     let subscription_parse_handle = crossbeam::scope(|scope| {
         let handle: crossbeam::thread::ScopedJoinHandle<Result<Vec<model::Service>, io::Error>> =
             scope.spawn(|_| {
-                let (subscription_files, subscription_contents) =
-                    scanner::par_scan(&environment, &base_file_path, &subscription_file_path)?;
-                Ok(parse_par_services(
+                let (subscription_files, subscription_contents) = scanner::scan_concurrent(
+                    &environment,
+                    &base_file_path,
+                    &subscription_file_path,
+                )?;
+                Ok(parse_services_concurrent(
                     subscription_files,
                     subscription_contents,
                 ))
@@ -71,12 +98,12 @@ pub fn par_run(
     let topic_services = topic_parse_handle.unwrap()?;
     let subscription_services = subscription_parse_handle.unwrap()?;
 
-    let graph = builder::par_build(topic_services, subscription_services);
+    let graph = builder::build_concurrent(topic_services, subscription_services);
 
     Ok(graph)
 }
 
-fn parse_par_services(files: Vec<String>, contents: Vec<String>) -> Vec<model::Service> {
+fn parse_services_concurrent(files: Vec<String>, contents: Vec<String>) -> Vec<model::Service> {
     files
         .into_par_iter()
         .zip(contents.into_par_iter())

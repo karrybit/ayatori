@@ -35,11 +35,20 @@ This app parse Terraform writing relationship of microservices. Then, solve SNS 
 ### Usage
 
 ```sh
+$ ayatori-driver --help
+
 USAGE:
-    ayatori --environment <environment> --base_path <base_path> --topic <topic_file_name> --subscription <subscription_file_name>
+    ayatori-driver [FLAGS] --base_file_path <base_file_path> --environment <environment> --format <output_format> --subscription <subscription_file_name> --topic <topic_file_name>
+
+FLAGS:
+    -h, --help          Prints help information
+    -c, --concurrent    run concurrent
+    -V, --version       Prints version information
+
 OPTIONS:
-    -e, --environment    <environment>                  Environment [possible values: develop, staging, production]
-    -b, --base_file_path <base_file_path>               Base file path
-    -t, --topic      <topic_file_name>                  Topic file name
-    -s, --subscription     <subscription_file_name>     Subscription file name
+    -b, --base_file_path <base_file_path>          Base file path
+    -e, --environment <environment>                Environment [possible values: develop, staging, production]
+    -f, --format <output_format>                   Output format [possible values: json, graphviz, d3]
+    -s, --subscription <subscription_file_name>    Subscription file name
+    -t, --topic <topic_file_name>                  Topic file name
 ```
