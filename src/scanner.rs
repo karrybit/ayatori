@@ -1,14 +1,26 @@
 use rayon::prelude::*;
-use std::{fs, io};
+use std::{fs, io, path};
 
 pub(crate) fn scan(
     environment: &str,
     base_path: &str,
     file_name: &str,
 ) -> Result<(Vec<String>, Vec<String>), io::Error> {
-    let paths = fs::read_dir(base_path)?
-        .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, io::Error>>()?;
+    let paths: Vec<path::PathBuf> = fs::read_dir(base_path)?
+        .filter_map(|res| {
+            let path = res.map(|ent| ent.path());
+            match path.as_ref() {
+                Ok(p)
+                    if p.to_string_lossy()
+                        .split("/")
+                        .all(|a| a.chars().nth(0).map_or(false, |c| c != '.')) =>
+                {
+                    path.ok()
+                }
+                _ => None,
+            }
+        })
+        .collect();
 
     let files = paths
         .iter()
@@ -31,9 +43,21 @@ pub(crate) fn scan_concurrent(
     base_path: &str,
     file_name: &str,
 ) -> Result<(Vec<String>, Vec<String>), io::Error> {
-    let paths = fs::read_dir(base_path)?
-        .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, io::Error>>()?;
+    let paths: Vec<path::PathBuf> = fs::read_dir(base_path)?
+        .filter_map(|res| {
+            let path = res.map(|ent| ent.path());
+            match path.as_ref() {
+                Ok(p)
+                    if p.to_string_lossy()
+                        .split("/")
+                        .all(|a| a.chars().nth(0).map_or(false, |c| c != '.')) =>
+                {
+                    path.ok()
+                }
+                _ => None,
+            }
+        })
+        .collect();
 
     let files = paths
         .par_iter()
