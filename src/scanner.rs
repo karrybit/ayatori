@@ -11,9 +11,9 @@ pub(crate) fn scan(
             let path = res.map(|ent| ent.path());
             match path.as_ref() {
                 Ok(p)
-                    if p.to_string_lossy()
-                        .split("/")
-                        .all(|a| a.chars().nth(0).map_or(false, |c| c != '.')) =>
+                    if p.to_string_lossy().split("/").all(|a| {
+                        a.chars().all(|c| c == '.') || a.chars().nth(0).map_or(false, |c| c != '.')
+                    }) =>
                 {
                     path.ok()
                 }
