@@ -56,7 +56,7 @@ fn parse_arg() -> Arg {
                 .takes_value(true)
                 .short("f")
                 .long("format")
-                .possible_values(&["json", "dot", "d3"]),
+                .possible_values(&["json", "dot"]),
         )
         .arg(
             clap::Arg::with_name("run_concurrent")
