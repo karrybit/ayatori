@@ -1,8 +1,3 @@
-ENV=""
-BASE_PATH=""
-TOPIC=""
-SUBSCRIPTION=""
-
 build: ./target/release/ayatori-driver
 	cargo build --release
 
