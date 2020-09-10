@@ -5,8 +5,12 @@ authors = ["makanai5610 <takumi.k.5610@gmail.com>"]
 edition = "2018"
 
 [lib]
+crate-type = ["cdylib", "rlib"]
 name = "ayatori"
 path = "src/lib.rs"
+
+[features]
+default = ["console_error_panic_hook"]
 
 [[bin]]
 name = "ayatori-driver"
@@ -20,3 +24,7 @@ crossbeam = ""
 serde = ""
 serde_derive = ""
 serde_json = ""
+
+wasm-bindgen = ""
+console_error_panic_hook = { version="", optional=true}
+wee_alloc = ""

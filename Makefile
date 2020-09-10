@@ -21,3 +21,6 @@ eg_json: build
 
 eg_dot: build
 	./target/release/ayatori-driver -e develop -b example -t sns_topic.tf -s sns_subscription.tf -f dot | dot -Tsvg -o dependency.svg
+
+wasm:
+	wasm-pack build
