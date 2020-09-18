@@ -2,11 +2,36 @@ use crossbeam;
 use petgraph;
 use rayon::prelude::*;
 use std::io;
+use wasm_bindgen::prelude::*;
 
 mod builder;
 mod model;
 mod parser;
 mod scanner;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+#[wasm_bindgen]
+pub async fn graph() -> String {
+    let graph = run(
+        "develop".into(),
+        "example".into(),
+        "sns_topic.tf".into(),
+        "sns_subscription.tf".into(),
+        false,
+    );
+    let s = format!("{:?}", graph);
+    unsafe {
+        log(s.as_ref());
+    }
+    let graph = graph.unwrap();
+    let json = serde_json::to_string(&graph).unwrap();
+    json
+}
 
 pub fn run(
     environment: String,

@@ -26,5 +26,6 @@ serde_derive = ""
 serde_json = ""
 
 wasm-bindgen = ""
+wasm-bindgen-futures = ""
 console_error_panic_hook = { version="", optional=true}
 wee_alloc = ""
