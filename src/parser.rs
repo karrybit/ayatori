@@ -453,7 +453,6 @@ impl<'a> Parser<'a> {
     }
 
     fn invalid_token(&self, expect: TokenType, actual: &TokenType, line: u32, column: u32) -> ! {
-        // dbg!(self);
         panic!(
             "[{}:{}]: token is invalid. expect: {:?}, actual: {:?}",
             line, column, expect, actual
@@ -479,7 +478,6 @@ impl<'a> Parser<'a> {
         line: u32,
         column: u32,
     ) -> ! {
-        // dbg!(self);
         panic!(
             "[{}:{}]: value is invalid. expect: {:?}, actual: {:?}",
             line, column, expect, actual
