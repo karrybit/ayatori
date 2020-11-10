@@ -2,8 +2,9 @@
 
 ```
 <resources>             ::= (<resource>)+
-<resource>              ::= 'resource' <string> <string> '{' <attribute>* '}'
+<resource>              ::= 'resource' <resource_kind> <event_name> '{' <attribute>* '}'
 <resource_kind>         ::= 'aws_sns_topic' | 'aws_sns_topic_subscription'
+<event_name>            ::= <string>
 <attribute>             ::= <ident> '=' (<value> | <headoc>)
 <value>                 ::= <dictionary> | <atom> | <ident>
 <dictionary>            ::= '{' (<ident> '=' <value>)+ '}'
