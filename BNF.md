@@ -7,7 +7,9 @@
 <attribute>             ::= <ident> '=' (<value> | <headoc>)
 <value>                 ::= <dictionary> | <atom> | <ident>
 <dictionary>            ::= '{' (<ident> '=' <value>)+ '}'
-<ident>                 ::= <char>(<char> | <symbol> | <number>)*
+<ident>                 ::= <alphabet>(<alphabet> | <symbol> | <number>)*
+<alphabet>              ::= ('A'|...|'z')
+<symbol>                ::= ('.'|':'|'-'|'_')
 
 <heardoc>               ::= '<<' <tag> <dictionary> <tag>
 <heardoc_tag>           ::= ('A'|...|'Z')*
@@ -19,9 +21,7 @@
 <heardoc_value>         ::= <dictionary> | <array> | <atom>
 
 <atom>                  ::= <string> | <number> | <bool>
-<string>                ::= '"' (<char>(<char> | <symbol> | <number>)*)+ '"'
-<char>                  ::= ('A'|...|'z')
-<symbol>                ::= ('.'|':'|'-'|'_')
-<number>                ::= (1|...|9)+(0|...|9)
+<string>                ::= '"' (<char> | <number>)* '"'
+<number>                ::= (1|...|9)*(0|...|9)
 <bool>                  ::= true | false
 ```
